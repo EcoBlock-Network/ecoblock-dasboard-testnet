@@ -1,59 +1,84 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, NavLink } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import Header from './components/Header';
+import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
 import BlocksView from './components/BlocksView';
+import Documentation from './components/Documentation';
+import { healthApi } from './services/api';
 import './index.css';
 
 const App: React.FC = () => {
-  return (
-    <Router>
-      <div className="min-h-screen bg-gray-50">
-        {/* Navigation */}
-        <nav className="bg-white shadow-sm border-b border-gray-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between h-16">
-              <div className="flex">
-                <div className="flex-shrink-0 flex items-center">
-                  <h1 className="text-xl font-bold text-gray-900">EcoBlock</h1>
-                </div>
-                <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-                  <NavLink
-                    to="/"
-                    className={({ isActive }) =>
-                      isActive
-                        ? "border-blue-500 text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-                    }
-                  >
-                    Dashboard
-                  </NavLink>
-                  <NavLink
-                    to="/blocks"
-                    className={({ isActive }) =>
-                      isActive
-                        ? "border-blue-500 text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-                    }
-                  >
-                    Blocks
-                  </NavLink>
-                </div>
-              </div>
-            </div>
-          </div>
-        </nav>
+  const [activeView, setActiveView] = useState('dashboard');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<'online' | 'offline' | 'error'>('offline');
+  const [demoMode, setDemoMode] = useState(false);
 
-        {/* Main Content */}
-        <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-          <div className="px-4 py-6 sm:px-0">
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/blocks" element={<BlocksView />} />
-            </Routes>
-          </div>
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+
+  const toggleDemoMode = () => {
+    setDemoMode(!demoMode);
+  };
+
+  const checkConnection = async () => {
+    if (demoMode) {
+      setConnectionStatus('online');
+      return;
+    }
+    
+    try {
+      await healthApi.getHealth();
+      setConnectionStatus('online');
+    } catch (error) {
+      setConnectionStatus('offline');
+    }
+  };
+
+  useEffect(() => {
+    checkConnection();
+    const interval = setInterval(checkConnection, 10000);
+    return () => clearInterval(interval);
+  }, [demoMode]);
+
+  const renderActiveView = () => {
+    switch (activeView) {
+      case 'dashboard':
+        return <Dashboard />;
+      case 'blocks':
+        return <BlocksView />;
+      case 'metrics':
+        return <div className="metrics-placeholder">Metrics view coming soon</div>;
+      case 'documentation':
+        return <Documentation />;
+      default:
+        return <Dashboard />;
+    }
+  };
+
+  return (
+    <div className="app-layout">
+      <Sidebar
+        activeView={activeView}
+        setActiveView={setActiveView}
+        isOpen={sidebarOpen}
+        toggleSidebar={toggleSidebar}
+      />
+      
+      <div className="app-content">
+        <Header
+          activeView={activeView}
+          toggleSidebar={toggleSidebar}
+          connectionStatus={connectionStatus}
+          demoMode={demoMode}
+          toggleDemoMode={toggleDemoMode}
+        />
+        
+        <main className="main-content">
+          {renderActiveView()}
         </main>
       </div>
-    </Router>
+    </div>
   );
 };
 
