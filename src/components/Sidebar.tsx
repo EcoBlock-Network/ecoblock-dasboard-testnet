@@ -1,5 +1,5 @@
 import React from 'react';
-import { Activity, Database, BarChart3, BookOpen, X } from 'lucide-react';
+import { Activity, Database, BarChart3, BookOpen, X, Network } from 'lucide-react';
 
 interface SidebarProps {
   activeView: string;
@@ -12,6 +12,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, isOpen, to
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Activity },
     { id: 'blocks', label: 'Blocks', icon: Database },
+    { id: 'tangle', label: 'Tangle Graph', icon: Network },
     { id: 'metrics', label: 'Metrics', icon: BarChart3 },
     { id: 'documentation', label: 'Documentation', icon: BookOpen },
   ];

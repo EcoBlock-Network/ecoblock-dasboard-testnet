@@ -87,15 +87,25 @@ const Dashboard: React.FC = () => {
       }
     };
 
-    fetchData();
+    // Initial fetch
+    if (!demoMode) {
+      fetchData();
+    } else {
+      loadDemoData();
+      setLoading(false);
+    }
     
-    const interval = setInterval(() => {
-      if (!demoMode) {
-        fetchData();
+    // Set up interval only if not in demo mode
+    let interval: number | null = null;
+    if (!demoMode) {
+      interval = setInterval(fetchData, 30000); // Reduced to 30 seconds
+    }
+    
+    return () => {
+      if (interval) {
+        clearInterval(interval);
       }
-    }, 5000);
-    
-    return () => clearInterval(interval);
+    };
   }, [demoMode]);
 
   if (loading) {

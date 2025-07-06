@@ -3,6 +3,7 @@ import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
 import BlocksView from './components/BlocksView';
+import TangleVisualization from './components/TangleVisualization';
 import Documentation from './components/Documentation';
 import { healthApi } from './services/api';
 import './index.css';
@@ -21,23 +22,27 @@ const App: React.FC = () => {
     setDemoMode(!demoMode);
   };
 
-  const checkConnection = async () => {
-    if (demoMode) {
-      setConnectionStatus('online');
-      return;
-    }
-    
-    try {
-      await healthApi.getHealth();
-      setConnectionStatus('online');
-    } catch (error) {
-      setConnectionStatus('offline');
-    }
-  };
-
   useEffect(() => {
-    checkConnection();
-    const interval = setInterval(checkConnection, 10000);
+    const checkConnectionSafe = async () => {
+      if (demoMode) {
+        setConnectionStatus('online');
+        return;
+      }
+      
+      try {
+        await healthApi.getHealth();
+        setConnectionStatus('online');
+      } catch (error) {
+        setConnectionStatus('offline');
+      }
+    };
+
+    // Initial check
+    checkConnectionSafe();
+    
+    // Set up interval with longer delay
+    const interval = setInterval(checkConnectionSafe, 60000); // Reduced to 1 minute
+    
     return () => clearInterval(interval);
   }, [demoMode]);
 
@@ -47,6 +52,8 @@ const App: React.FC = () => {
         return <Dashboard />;
       case 'blocks':
         return <BlocksView />;
+      case 'tangle':
+        return <TangleVisualization />;
       case 'metrics':
         return <div className="metrics-placeholder">Metrics view coming soon</div>;
       case 'documentation':

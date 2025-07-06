@@ -15,6 +15,10 @@ const apiClient = axios.create({
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Silently handle connection errors to avoid spam
+    if (!error.response || error.code === 'ECONNREFUSED') {
+      return Promise.reject(new Error('Connection failed'));
+    }
     console.error('API Error:', error.response?.data || error.message);
     return Promise.reject(error);
   }
@@ -59,15 +63,16 @@ export const networkApi = {
 };
 
 export const blockApi = {
-  async getBlocks(page: number = 1, perPage: number = 10): Promise<BlockListResponse> {
-    const response = await apiClient.get<ApiResponse<Block[]>>(`/blocks?page=${page}&per_page=${perPage}`);
+  async getBlocks(): Promise<BlockListResponse> {
+    const response = await apiClient.get<ApiResponse<Block[]>>(`/blocks`);
     
     if (response.data.success && response.data.data) {
+      const allBlocks = response.data.data;
       return {
-        blocks: response.data.data,
-        total: response.data.data.length,
-        page: page,
-        per_page: perPage
+        blocks: allBlocks,
+        total: allBlocks.length,
+        page: 1,
+        per_page: allBlocks.length
       };
     } else {
       throw new Error(response.data.message || 'Failed to fetch blocks');

@@ -22,7 +22,7 @@ const BlocksView: React.FC = () => {
     const fetchBlocks = async () => {
       try {
         setLoading(true);
-        const response = await blockApi.getBlocks(1, 50);
+        const response = await blockApi.getBlocks();
         setBlocks(response.blocks);
         setError(null);
       } catch (err) {
@@ -32,12 +32,14 @@ const BlocksView: React.FC = () => {
       }
     };
 
+    // Initial fetch
     fetchBlocks();
     
-    const interval = setInterval(fetchBlocks, 10000);
+    // Set up interval with longer delay
+    const interval = setInterval(fetchBlocks, 30000); // Reduced to 30 seconds
     
     return () => clearInterval(interval);
-  }, []);
+  }, []); // Empty dependency array to prevent re-creation
 
   if (loading) {
     return (
